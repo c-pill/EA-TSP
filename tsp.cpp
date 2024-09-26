@@ -11,12 +11,20 @@ using namespace std;
 int num_nodes;
 int number = 0;
 
-// function displays individual
+// function displays an individual
 void indPrint(int * ind) {
     for (auto i = 0; i < num_nodes; i++)
         cout << ind[i] << ' ';
     cout << endl << endl;
 }
+
+// function displays the population
+void popPrint(int ** pop, int size) {
+    for (auto i = 0; i < size; i++) {
+        cout << "Individual " << i << ':' << endl;
+        indPrint(pop[i]);
+    }
+} 
 
 // fitness function calculates the Euclidean distance between two nodes
 int fitness(int * node1, int * node2) {
@@ -95,7 +103,8 @@ int main() {
     srand(time(0));
 
     int ** pop = generatePopulation(size); 
-    indPrint(pop[0]);
+    
+    popPrint(pop, size);
     // code for beginning the 
 
     deletePopulation(pop, size);
