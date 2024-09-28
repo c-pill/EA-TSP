@@ -35,11 +35,11 @@ double fitness(int * node1, int * node2) {
 }
 
 // function calculates an individual's fitness
-int indFitness(int ** coords, int * ind) {
-    int fit = 0;
-    for (int i = 0, j = 1; j <= num_nodes; i++)
+double indFitness(int coords[][2], int * ind) {
+    double fit = 0;
+    for (int i = 0, j = 1; j < num_nodes; i++, j++)
         fit += fitness(coords[ind[i]], coords[ind[j]]);
-    fit += fitness(coords[ind[0]], coords[ind[num_nodes]]);
+    fit += fitness(coords[ind[num_nodes]], coords[ind[0]]);
     return fit;
 }
 
@@ -109,11 +109,7 @@ int main() {
     
     indPrint(pop[0]);
 
-    cout << coords[pop[0][0]][0] << ' ' << coords[pop[0][1]][0] << endl;
-    cout << coords[pop[0][0]][1] << ' ' << coords[pop[0][1]][1] << endl;
-    cout << sqrt(pow(coords[pop[0][0]][0]-coords[pop[0][1]][0], 2) + 
-            pow(coords[pop[0][0]][1]-coords[pop[0][1]][1], 2)) << endl;
-    cout << fitness(coords[pop[0][0]], coords[pop[0][1]]);
+    cout << indFitness(coords, pop[0]);
 
     // code for beginning the 
 
