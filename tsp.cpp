@@ -8,6 +8,8 @@
 
 using namespace std;
 
+double best_fit;
+int * best_ind;
 int num_nodes;
 int number = 0;
 
@@ -27,8 +29,8 @@ void popPrint(int ** pop, int size) {
 } 
 
 // fitness function calculates the Euclidean distance between two nodes
-int fitness(int * node1, int * node2) {
-    int euc_dist = pow(node1[0]-node2[0],2) + pow(node1[1]-node2[1],2);
+double fitness(int * node1, int * node2) {
+    double euc_dist = pow(node1[0]-node2[0],2) + pow(node1[1]-node2[1],2);
     return sqrt(euc_dist);
 }
 
@@ -37,6 +39,7 @@ int indFitness(int ** coords, int * ind) {
     int fit = 0;
     for (int i = 0, j = 1; j <= num_nodes; i++)
         fit += fitness(coords[ind[i]], coords[ind[j]]);
+    fit += fitness(coords[ind[0]], coords[ind[num_nodes]]);
     return fit;
 }
 
@@ -104,7 +107,14 @@ int main() {
 
     int ** pop = generatePopulation(size); 
     
-    popPrint(pop, size);
+    indPrint(pop[0]);
+
+    cout << coords[pop[0][0]][0] << ' ' << coords[pop[0][1]][0] << endl;
+    cout << coords[pop[0][0]][1] << ' ' << coords[pop[0][1]][1] << endl;
+    cout << sqrt(pow(coords[pop[0][0]][0]-coords[pop[0][1]][0], 2) + 
+            pow(coords[pop[0][0]][1]-coords[pop[0][1]][1], 2)) << endl;
+    cout << fitness(coords[pop[0][0]], coords[pop[0][1]]);
+
     // code for beginning the 
 
     deletePopulation(pop, size);
