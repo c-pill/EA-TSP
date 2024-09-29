@@ -8,83 +8,91 @@
 
 using namespace std;
 
+double best_fit;
+int * best_ind;
 int num_nodes;
 int number = 0;
 
-// function displays an individual
-void indPrint(int * ind) {
-    for (auto i = 0; i < num_nodes; i++)
-        cout << ind[i] << ' ';
-    cout << endl << endl;
-}
+// each Generation stores the population and each individuals fitness
+class Generation {
+    public:
+        int ** population;
+        int * fitness;
+        int size;
 
-// function displays the population
-void popPrint(int ** pop, int size) {
-    for (auto i = 0; i < size; i++) {
-        cout << "Individual " << i << ':' << endl;
-        indPrint(pop[i]);
-    }
-} 
+        int* generatePermutation() {
+            int* individual = new int[num_nodes];
+            int pos;
+            vector<int> used;
+            for (auto i = 0; i < num_nodes; i++) 
+                used.push_back(i);
+            for (auto i = 0; i < num_nodes; i++) {
+                pos = rand() % used.size();
+                individual[i] = used[pos];
+                used.erase(used.begin() + pos);
+            }
+            return individual;
+        }
 
-// fitness function calculates the Euclidean distance between two nodes
-int fitness(int * node1, int * node2) {
-    int euc_dist = pow(node1[0]-node2[0],2) + pow(node1[1]-node2[1],2);
-    return sqrt(euc_dist);
-}
+        // function calculates an individual's fitness using Euclidean distance
+        int calculateFitness(int coords[][2], int pos) {
+            double fit = 0;
+            int * individual = population[pos];
+            for (int i = 0, j = 1; j < num_nodes; i++, j++) {
+                fit += sqrt(
+                    pow(coords[individual[i]][0]-coords[individual[j]][0], 2) +
+                    pow(coords[individual[i]][1]-coords[individual[j]][1], 2)); 
+            }
+            fit += sqrt(
+                pow(coords[individual[0]][0]-coords[individual[num_nodes-1]][0], 2) +
+                pow(coords[individual[0]][1]-coords[individual[num_nodes-1]][1], 2));
 
-// function calculates an individual's fitness
-int indFitness(int ** coords, int * ind) {
-    int fit = 0;
-    for (int i = 0, j = 1; j <= num_nodes; i++)
-        fit += fitness(coords[ind[i]], coords[ind[j]]);
-    return fit;
-}
+            return (int)fit;
+        }
+            
+        // function displays an individual
+        void printIndividual(int pos) {
+            cout << "Individual " << pos+1 << ':' << endl;
+            for (auto i = 0; i < num_nodes; i++)
+                cout << population[pos][i] << ' ';
+            cout << endl << "Fitness " << fitness[pos] << endl;
+        }
 
-int* generatePermutation() {
-    int* ind = new int[num_nodes];
-    int pos;
-    vector<int> used;
-    for (auto i = 0; i < num_nodes; i++) 
-        used.push_back(i);
-
-    for (auto i = 0; i < num_nodes; i++) {
-        pos = rand() % used.size();
-        ind[i] = used[pos];
-        used.erase(used.begin() + pos);
-    }
-    return ind;
-}
-
-// function generates initial population
-int** generatePopulation(int size) {
-    // individuals stored in [0], fitness stored in [1]
-    int** pop = new int*[size];
-    for (auto i = 0; i < size; i++) {
-        pop[i] = generatePermutation();
-    }
+        // function displays the population
+        void print() {
+            for (auto i = 0; i < size; i++)
+                printIndividual(i);
+        } 
         
-    return pop;
-}
+        // constructor takes in size of each population to create generation
+        Generation(int coords[][2], int s) {
+            size = s;
+            population = new int*[size];
+            fitness = new int[size];
+            srand(time(0));
+            for (auto i = 0; i < size; i++) {
+                population[i] = generatePermutation();
+                fitness[i] = calculateFitness(coords, i);
+            }
+        }
 
-// deletes population once program is complete
-void deletePopulation(int ** pop, int size) {
-    for (auto i = 0; i < size; i++) {
-        delete(pop[i]);
-    }
-    delete(pop);
-}
+        ~Generation() {
+            cout << "Kill" << endl;
+        }
+};
 
 int main() {
-    // code intializing the process: collect data and generate first
-    // population
-
+    cout << "Accessing file ..." << endl;
+    // reads data from file and creates initial generation
     ifstream file("TSPDATA.txt", ios::in);
     if (!file.is_open()) {
-        cerr << "Error accessing file";
+        cerr << "Error accessing file.";
         return 1;
     }
     string s;
     int node, x_coord, y_coord;
+    
+    cout << "Reading data from file ... " << endl;
 
     for (auto i = 0; i < 2; i++, file >> s);
     file >> num_nodes;
@@ -99,14 +107,14 @@ int main() {
         coords[i][0] = x_coord;
         coords[i][1] = y_coord;
     }
-    const int size = 4*num_nodes;
-    srand(time(0));
 
-    int ** pop = generatePopulation(size); 
+    cout << "Data from file stored. Creating first generation ..." << endl;
+
+    // population size 4 times the number of nodes
+    Generation parent(coords, 4*num_nodes);
     
-    popPrint(pop, size);
-    // code for beginning the 
+    parent.print();
+    cout << "Intialization Complete." << endl;
 
-    deletePopulation(pop, size);
     return 0;
 }
