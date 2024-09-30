@@ -98,25 +98,28 @@ class Generation {
         // function evaluates an individual's fitness using Euclidean distance
         int EVALUATE(int coords[][2], int pos) {
             double fit = 0;
+            int fit_int;
             int * individual = population[pos];
             for (int i = 0, j = 1; j < num_nodes; i++, j++) {
                 fit += sqrt(
                     pow(coords[individual[i]][0]-coords[individual[j]][0], 2) +
-                    pow(coords[individual[i]][1]-coords[individual[j]][1], 2)); 
+                    pow(coords[individual[i]][1]-coords[individual[j]][1], 2));
             }
             fit += sqrt(
                 pow(coords[individual[0]][0]-coords[individual[num_nodes-1]][0], 2) +
                 pow(coords[individual[0]][1]-coords[individual[num_nodes-1]][1], 2));
 
-            if (fit < best_fit) {
-                best_fit = fit;
+            fit_int = (int) fit;
+
+            if (fit_int < best_fit) {
+                best_fit = fit_int;
                 best_individual = individual;
                 stale_iter = 0;
             }
             else
                 stale_iter++;
 
-            return (int)fit;
+            return fit_int;
         }
        
         void SURVIVER_SELECTION() {
@@ -157,7 +160,6 @@ class Children : public Generation {
         void MUTATE(int pos) {
             int mutate = rand() % size;
             if (mutate == 1) {
-                cout << pos << endl;
                 int pos_1 = rand() % num_nodes;
                 int pos_2 = rand() % num_nodes;
                 int node;
@@ -239,6 +241,7 @@ int main() {
 
     //generation.print();
 
+    cout << "Best: " << best_fit << endl;
     //while (stale_iter < 5000 && iterations < 10000) {
         // create new children set
         Children children(size);
@@ -251,12 +254,10 @@ int main() {
         for (auto i = 0; i < size; i++)
             children.MUTATE(i);
 
-        children.print();
         // perform EVALUATE function to evaluate children
         for (auto i = 0; i < size; i++)
-            children.EVALUATE(coords, i);
+            children.fitness[i] = children.EVALUATE(coords, i);
 
-        //children.print();
         // mutate offspring
         // evauluate new candidates
         // select individuals for the next generation
