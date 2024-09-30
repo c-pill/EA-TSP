@@ -41,23 +41,7 @@ class Generation {
             }
             return individual;
         }
-
-        // function calculates an individual's fitness using Euclidean distance
-        int calculateFitness(int coords[][2], int pos) {
-            double fit = 0;
-            int * individual = population[pos];
-            for (int i = 0, j = 1; j < num_nodes; i++, j++) {
-                fit += sqrt(
-                    pow(coords[individual[i]][0]-coords[individual[j]][0], 2) +
-                    pow(coords[individual[i]][1]-coords[individual[j]][1], 2)); 
-            }
-            fit += sqrt(
-                pow(coords[individual[0]][0]-coords[individual[num_nodes-1]][0], 2) +
-                pow(coords[individual[0]][1]-coords[individual[num_nodes-1]][1], 2));
-
-            return (int)fit;
-        }
-            
+     
         // function displays an individual based on position in population
         void printIndividual(int pos) {
             cout << "Individual " << pos+1 << ':' << endl;
@@ -78,16 +62,10 @@ class Generation {
             for (auto i = 0; i < size; i++)
                 printIndividual(i);
         } 
-        
-        // function used to add individuals to generation
-        void addIndividual(int * individual) {
-            population[size] = individual;
-            size++;
-        }
 
+        // parent selection is uniform random
         // mating function uses order crossover and returns the child
         int * MATE() {
-            srand(time(0));
             int pos_1 = rand() % size;
             int pos_2 = rand() % size;
             while (pos_1 == pos_2)
@@ -112,18 +90,25 @@ class Generation {
                 else
                     child[i] = parent_2[i];
             }
-            printNew(child);
+            //printNew(child);
             return child;
         }
 
-        void MUTATE() {
+        // function evaluates an individual's fitness using Euclidean distance
+        int EVALUATE(int coords[][2], int * individual) {
+            double fit = 0;
+            for (int i = 0, j = 1; j < num_nodes; i++, j++) {
+                fit += sqrt(
+                    pow(coords[individual[i]][0]-coords[individual[j]][0], 2) +
+                    pow(coords[individual[i]][1]-coords[individual[j]][1], 2)); 
+            }
+            fit += sqrt(
+                pow(coords[individual[0]][0]-coords[individual[num_nodes-1]][0], 2) +
+                pow(coords[individual[0]][1]-coords[individual[num_nodes-1]][1], 2));
 
+            return (int)fit;
         }
-
-        void EVALUATE() {
-
-        }
-
+       
         void SELECT() {
 
         }
@@ -134,26 +119,49 @@ class Generation {
             size = s;
             population = new int*[size];
             fitness = new int[size];
-            srand(time(0));
             for (auto i = 0; i < size; i++) {
                 population[i] = generatePermutation();
-                fitness[i] = calculateFitness(coords, i);
+                fitness[i] = EVALUATE(coords, population[i]);
             }
         }
 
-        // constructor takes size to create shell for next generation
-        Generation(int s) {
-            size = s;
-        }
-
-        Generation() {
-            size = 0;
-        }
+        Generation() {}
         
         ~Generation() {}
 };
 
+class Children : public Generation {
+        
+    public:
+        // keeps track of how many individuals have been added to the children's set
+        int individuals_set;
+
+        // function used to add individuals to generation
+        void addIndividual(int * individual) {
+            population[individuals_set] = individual;
+            individuals_set++;
+        }
+
+        // function that performs scramble mutation on child
+        void MUTATE() {
+            
+        }
+
+        Children() {}
+        
+        // constructor takes size to create shell for children set
+        Children(int s) {
+            size = s;
+            population = new int*[size];
+            fitness = new int[size];
+            individuals_set = 0;
+        }
+        
+        ~Children() {}
+};
+
 int main() {
+    srand(time(0));
     cout << "Accessing file ..." << endl;
     // reads data from file and creates initial generation
     ifstream file("TSPDATA.txt", ios::in);
@@ -192,12 +200,17 @@ int main() {
     //generation.print();
 
     //while (stale_iter < 5000 && iterations < 10000) {
-        Generation children;
-        int * child = generation.MATE();
-        children.printNew(child);
-        //children.printIndividual(0);
-        //cout << endl << children.size;
+        // create new children set
+        Children children(size);
+        
+        // perform MATE function size/4 times
+        for (auto i = 0; i < size; i++)
+            children.addIndividual(generation.MATE());
+        
+        children.print();
+
         // recombine pairs of parents
+
         // mutate offspring
         // evauluate new candidates
         // select individuals for the next generation
