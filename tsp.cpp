@@ -63,6 +63,7 @@ class Generation {
                 printIndividual(i);
         } 
 
+        // function to SELECT parents and then RECOMBINE them
         // parent selection is uniform random
         // mating function uses order crossover and returns the child
         int * MATE() {
@@ -95,8 +96,9 @@ class Generation {
         }
 
         // function evaluates an individual's fitness using Euclidean distance
-        int EVALUATE(int coords[][2], int * individual) {
+        int EVALUATE(int coords[][2], int pos) {
             double fit = 0;
+            int * individual = population[pos];
             for (int i = 0, j = 1; j < num_nodes; i++, j++) {
                 fit += sqrt(
                     pow(coords[individual[i]][0]-coords[individual[j]][0], 2) +
@@ -106,10 +108,18 @@ class Generation {
                 pow(coords[individual[0]][0]-coords[individual[num_nodes-1]][0], 2) +
                 pow(coords[individual[0]][1]-coords[individual[num_nodes-1]][1], 2));
 
+            if (fit < best_fit) {
+                best_fit = fit;
+                best_individual = individual;
+                stale_iter = 0;
+            }
+            else
+                stale_iter++;
+
             return (int)fit;
         }
        
-        void SELECT() {
+        void SURVIVER_SELECTION() {
 
         }
 
@@ -121,7 +131,7 @@ class Generation {
             fitness = new int[size];
             for (auto i = 0; i < size; i++) {
                 population[i] = generatePermutation();
-                fitness[i] = EVALUATE(coords, population[i]);
+                fitness[i] = EVALUATE(coords, i);
             }
         }
 
@@ -143,12 +153,40 @@ class Children : public Generation {
         }
 
         // function that performs scramble mutation on child
-        void MUTATE() {
-            
+        // function takes in child's position in its set
+        void MUTATE(int pos) {
+            int mutate = rand() % size;
+            if (mutate == 1) {
+                cout << pos << endl;
+                int pos_1 = rand() % num_nodes;
+                int pos_2 = rand() % num_nodes;
+                int node;
+                while (pos_1 == pos_2)
+                    pos_2 = rand() % num_nodes;
+                if (pos_1 > pos_2) {
+                    int tmp = pos_1;
+                    pos_1 = pos_2;
+                    pos_2 = tmp;
+                }
+
+                //printIndividual(pos);
+                //cout << endl << pos_1 << ' ' << pos_2 << endl;
+
+                int * child = population[pos];
+                vector<int> used;
+                for (auto i = pos_1; i <= pos_2; i++) 
+                    used.push_back(child[i]);
+                for (auto i = pos_1; i <= pos_2; i++) {
+                    node = rand() % used.size();
+                    child[i] = used[node];
+                    used.erase(used.begin() + node);
+                }
+
+                //printIndividual(pos);
+
+            }
         }
 
-        Children() {}
-        
         // constructor takes size to create shell for children set
         Children(int s) {
             size = s;
@@ -156,6 +194,8 @@ class Children : public Generation {
             fitness = new int[size];
             individuals_set = 0;
         }
+        
+        Children() {}
         
         ~Children() {}
 };
@@ -203,14 +243,20 @@ int main() {
         // create new children set
         Children children(size);
         
-        // perform MATE function size/4 times
+        // perform MATE function to create children
         for (auto i = 0; i < size; i++)
             children.addIndividual(generation.MATE());
         
+        // perform MUTATE function to potentially mutate children
+        for (auto i = 0; i < size; i++)
+            children.MUTATE(i);
+
         children.print();
+        // perform EVALUATE function to evaluate children
+        for (auto i = 0; i < size; i++)
+            children.EVALUATE(coords, i);
 
-        // recombine pairs of parents
-
+        //children.print();
         // mutate offspring
         // evauluate new candidates
         // select individuals for the next generation
